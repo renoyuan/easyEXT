@@ -16,3 +16,4 @@ paddleocr ocr --help
 
 模型默认路径
 /home/tlrobot/.paddlex
+```

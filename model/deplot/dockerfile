@@ -1,0 +1,14 @@
+# Dockerfile
+FROM vllm/vllm-openai:latest
+
+# 安装依赖
+RUN pip install fastapi uvicorn "uvicorn[standard]"
+
+# 复制代码
+COPY main.py /app/main.py
+
+# 启动脚本
+CMD vllm serve main:llm_engine \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --tensor-parallel-size ${GPU_COUNT:-1}

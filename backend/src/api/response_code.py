@@ -5,7 +5,6 @@
 # E_MAIL: renoyuan@foxmail.com
 # AUTHOR: renoyuan
 # note:
-
 code_map = {
     200: ("操作成功", 1),
     601: ("操作失败！", 0),
