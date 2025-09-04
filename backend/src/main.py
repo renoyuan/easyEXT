@@ -16,8 +16,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 
-from .api import api_router
-from .utils.invoke_model import InvokeModel
+from api import api_router
+from utils.invoke_model import InvokeModel
 
 
 env_path = r".env"
@@ -38,6 +38,11 @@ async def lifespan(app: FastAPI):
     engine = create_engine(f"postgresql+psycopg2://{DbConfig['user']}:{DbConfig['password']}@{DbConfig['host']}:{DbConfig['port']}/{DbConfig['database']}")
     SQLModel.metadata.create_all(engine)
     app.state.db_engine = engine
+    
+    scenesPath = os.getenv("scenesPath")
+    with open(scenesPath, "r", encoding="utf-8") as f:
+        app.state.scenes = json.load(f)
+
     yield  # 应用运行期间保持模型在内存中
     
     # 关闭时清理资源
@@ -60,6 +65,8 @@ origins = [
     "https://localhost.tiangolo.com",
     "http://localhost",
     "http://localhost:8080",
+    "http://localhost:5173",
+
 ]
 # 中间件
 app.add_middleware(

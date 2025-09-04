@@ -17,8 +17,7 @@ from PIL import Image
 import numpy as np
 import io
 from .response_code import gen_response
-# from .middleware import api_ocr_depends,PicItem
-# from .file_deal import FileDeal
+from db.op_db import OpTasks,OpTaskresults,OpScenes
 
 async def uploadfile_to_ndarray(file: UploadFile) -> np.ndarray:
     content = await file.read()  # 读取二进制数据
@@ -29,9 +28,14 @@ async def uploadfile_to_ndarray(file: UploadFile) -> np.ndarray:
     img_array = np.array(img)
     print("图像维度:", img_array.shape) 
     return img_array  # 转换为 uint8 数组 (H×W×3)
+
 def get_model(request: Request):
     return request.app.state.model 
 
+def get_scenes(request: Request):
+    return request.app.state.scenes
+def get_db_engine(request: Request):
+    return request.app.state.db_engine
 
 invoke_model_router = APIRouter(prefix="/invoke_model",tags=["invoke_model"])
 
@@ -43,7 +47,10 @@ TODO 匹配场景 1 入库
     
 # ocr 识别 post ok
 @invoke_model_router.post("/extract")
-async def extract( scene: Optional[int], originalFiles: List[UploadFile] ,model = Depends(get_model)):
+async def extract(  originalFiles: List[UploadFile] ,scene_lable: Optional[str] = None,model = Depends(get_model),scenes = Depends(get_scenes),db_engine = Depends(get_db_engine)):
+
+
+
     """
         res = {
         "ori_info": {
@@ -56,13 +63,30 @@ async def extract( scene: Optional[int], originalFiles: List[UploadFile] ,model 
         }
     }
     """
-    key_list=["客户","基金名称","基金代码", "申请时间","确认时间", "基金转换金额", "基金转换份额", "交易类别", "手续费", "网点"]
-    data = model.extract(await uploadfile_to_ndarray(originalFiles[0]),key_list)
+    print(f"scene_lable is {scene_lable} scenes is {scenes.keys()}")
+    scene = OpScenes(db_engine).query_scene(scene_name=scene_lable)
 
-    logger.info(f"{scene} 识别结果 {data}")
+    if scene_lable in scenes and scene:
+        key_list = scenes[scene_lable]
+    else:
+        return gen_response(619, {"message": "场景不存在"})
+    task = OpTasks(db_engine).add_task(scene_id=scene.id,status=0,task_status=0)
+
+    data = model.extract(await uploadfile_to_ndarray(originalFiles[0]),key_list)
+    OpTaskresults(db_engine).add_taskresult(task_id=task.id,extracted_data=data,data_status="1")
+
+    OpTasks(db_engine).update_task(task_id=task.id,status=1,task_status=1)
+
+    logger.info(f"{scene_lable} 识别结果 {data}")
     
     # 返回 task id
     return gen_response(200, {"taskSns": data})
 
 
  
+if __name__ == "__main__":
+    from fastapi import FastAPI
+    app = FastAPI()
+    app.include_router(invoke_model_router)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

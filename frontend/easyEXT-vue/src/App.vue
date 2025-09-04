@@ -1,85 +1,167 @@
+
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import { ref, onMounted } from 'vue'
+import { useDataStore } from '@/stores/data'
+import { fetchCategories } from '@/api/api'
+import type { Category,CategoryItem } from '@/api/types'
+import { ArrowRight } from '@element-plus/icons-vue'
+
+const store = useDataStore();
+interface MenuItem {
+  id: string
+  name: string
+}
+
+const categories_ = ref<Category[]>([
+  {
+    id: 'c1',
+    name: '分类一',
+    items: [
+      { id: 'i1', name: '选项1' },
+      { id: 'i2', name: '选项2' },
+    ],
+  },
+  {
+    id: 'c2',
+    name: '分类二',
+    items: [
+      { id: 'i3', name: '选项3' },
+      { id: 'i4', name: '选项4' },
+    ],
+  },
+])
+
+const handleAction = (category: Category, item: MenuItem) => {
+  console.log(`操作：${category.name} - ${item.name}`)
+}
+
+const categories = ref<Category[] | null>([])   // 初始化空数组
+let cur_index:null |number   = null  // 当前选中索引
+let length   = null // 当前选中索引
+let items = ref<CategoryItem[] | null>([])
+
+
+onMounted(async () => {
+  try {
+    
+    
+    await store.fetchData();  // 自动缓存，不会重复请求
+    categories.value = store.info // 将 API 数据赋值给响应式变量
+    console.log(categories.value)
+  } catch (err: any) {
+    err.value = '加载失败，请重试'
+    console.log(err.value)
+    categories.value = categories_.value
+  } finally {
+    // loading.value = false
+  }
+})
+
+
+
+
 </script>
 
+
+
+
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+  <div class="app">
+  
+    <!-- 左侧垂直布局容器 -->
+    <div class="vertical-menu">
+      
+      <router-link class="menu-title" :to="{ path: '/' }"> 场景列表 </router-link>
+      <!-- 遍历生成多个下拉菜单 -->
+      <el-dropdown
+        v-for="category in categories"
+        :key="category.id"
+        placement="right-start"
+        trigger="click"
+      >
+        <!-- 菜单标题 -->
+        <span class="menu-title">
+          {{ category.name }}
+          <el-icon> </el-icon>
+        </span>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
+        <!-- 下拉菜单内容 -->
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item
+              v-for="item in category.items"
+              :key="item.id"
+              @click="handleAction(category, item)"
+            >
+              {{ item.name }}
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+      <router-link  class="menu-title" :to="{ path: '/taskList', query: { scene_id: 1, status: 1, page: 1, page_size: 10 } }"> 任务列表 </router-link >
     </div>
-  </header>
+    
+     <!-- 面包屑导航 -->
+    <el-breadcrumb class="arrow-right-class" :separator-icon="ArrowRight">
+      <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/about' }">promotion management</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/about' }">promotion list</el-breadcrumb-item>
+      <el-breadcrumb-item :to="{ path: '/about' }">promotion detail</el-breadcrumb-item>
+    </el-breadcrumb>
 
-  <RouterView />
+    <!-- 内容区域 -->
+    <div class="content">
+      <router-view />
+    </div>
+  </div>
 </template>
 
+
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+
+/* 左侧垂直菜单容器 */
+.vertical-menu {
+  position: fixed; /* 固定定位 */
+  top: 0; /* 贴紧顶部 */
+  left: 0; /* 贴紧左侧 */
+  width: 150px;
+  height: 100vh; /* 高度占满整个视口 */
+  background: #f9fafc;
+  border-right: 1px solid #e6e6e6;
+  z-index: 1000; /* 确保菜单在其他内容上方 */
+}
+ /* 面包屑导航 */
+.arrow-right-class {
+  position: fixed; /* 固定定位 */
+  top: 0;  
+  left: 180px; /* 留出左侧菜单的宽度 */
+
+  vertical-align: middle;
 }
 
-.logo {
+/* 内容区域 */
+.content {
+  position: fixed;
+  left: 180px;
+  top: 50px; /* 留出面包屑导航的高度 */
+  margin-left: 0px; /* 留出左侧菜单的宽度 */
+  background: #f0f2f5;
+
+}
+
+/* 菜单标题样式 */
+.menu-title {
   display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
+  padding: 15px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  &:hover {
+    background: #ecf5ff;
   }
+}
 
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+/* 下拉菜单宽度控制 */
+.el-dropdown-menu {
+  min-width: 80px !important;
 }
 </style>
