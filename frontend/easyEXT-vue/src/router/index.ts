@@ -18,16 +18,25 @@ const router = createRouter({
       // this generates a separate chunk (About.[hash].js) for this route
       // which is lazy-loaded when the route is visited.
       component: () => import('../views/AboutView.vue'),
+      meta: { breadcrumb: '首页' }
     },
     {
       path: '/taskList',
       name: 'taskList',
       component: () => import('../views/TaskListView.vue'),
+      meta: { breadcrumb: '首页' }
+    },
+    {
+      path: '/upload',
+      name: 'upload',
+      component: () => import('../components/UploadView.vue'),
+      meta: { breadcrumb: '上传任务' }
     },
     {
       path: '/taskDetail',
       name: 'taskDetail', 
       component: TaskDetailView,
+      meta: { breadcrumb: '任务详情'}
     },
     {
       path: '/scenes',

@@ -5,8 +5,14 @@ import { useDataStore } from '@/stores/data'
 import { fetchCategories } from '@/api/api'
 import type { Category,CategoryItem } from '@/api/types'
 import { ArrowRight } from '@element-plus/icons-vue'
+import Breadcrumb from '@/components/Breadcrumb.vue'
 
-const store = useDataStore();
+import UploadView from '@/components/UploadView.vue'
+
+const isUploadVisible = ref(false)
+const handleUploadClick = () => {}
+isUploadVisible.value = true
+
 interface MenuItem {
   id: string
   name: string
@@ -44,10 +50,10 @@ let items = ref<CategoryItem[] | null>([])
 onMounted(async () => {
   try {
     
-    
+    const store = useDataStore();
     await store.fetchData();  // 自动缓存，不会重复请求
     categories.value = store.info // 将 API 数据赋值给响应式变量
-    console.log(categories.value)
+    console.log("fetchData categories.value",categories.value)
   } catch (err: any) {
     err.value = '加载失败，请重试'
     console.log(err.value)
@@ -67,7 +73,8 @@ onMounted(async () => {
 
 <template>
   <div class="app">
-  
+    <el-container>
+    <el-aside>
     <!-- 左侧垂直布局容器 -->
     <div class="vertical-menu">
       
@@ -77,11 +84,12 @@ onMounted(async () => {
         v-for="category in categories"
         :key="category.id"
         placement="right-start"
-        trigger="click"
+        
       >
         <!-- 菜单标题 -->
         <span class="menu-title">
-          {{ category.name }}
+          <router-link  :to="{ path: '/', query: { categoryId:category.id } }"> {{ category.name }} </router-link >
+          
           <el-icon> </el-icon>
         </span>
 
@@ -93,26 +101,41 @@ onMounted(async () => {
               :key="item.id"
               @click="handleAction(category, item)"
             >
-              {{ item.name }}
+              <!-- 上传弹窗 -->    
+            <el-button type="primary" @click="handleUploadClick">
+              <UploadView 
+              v-if="isUploadVisible"
+              :visible="isUploadVisible"
+              @close="isUploadVisible = true"
+                />
+            </el-button>
+              <router-link  class="menu-title" :to="{ path: '/', query: { scene_id: 1, status: 1, page: 1, page_size: 10 } }"> {{ item.name }} </router-link >
             </el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
       <router-link  class="menu-title" :to="{ path: '/taskList', query: { scene_id: 1, status: 1, page: 1, page_size: 10 } }"> 任务列表 </router-link >
     </div>
-    
+    </el-aside>
+    <el-main>
+    <el-header>  
      <!-- 面包屑导航 -->
+      <!-- <Breadcrumb /> -->
     <el-breadcrumb class="arrow-right-class" :separator-icon="ArrowRight">
       <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item :to="{ path: '/about' }">promotion management</el-breadcrumb-item>
-      <el-breadcrumb-item :to="{ path: '/about' }">promotion list</el-breadcrumb-item>
       <el-breadcrumb-item :to="{ path: '/about' }">promotion detail</el-breadcrumb-item>
     </el-breadcrumb>
-
+    </el-header>
+    <el-main>
     <!-- 内容区域 -->
     <div class="content">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <component :is="Component || 'HomeView'" />
+      </router-view >
     </div>
+  </el-main>
+  </el-main>
+  </el-container>
   </div>
 </template>
 
@@ -133,7 +156,7 @@ onMounted(async () => {
  /* 面包屑导航 */
 .arrow-right-class {
   position: fixed; /* 固定定位 */
-  top: 0;  
+  top: 10px;  
   left: 180px; /* 留出左侧菜单的宽度 */
 
   vertical-align: middle;

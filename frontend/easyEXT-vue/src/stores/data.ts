@@ -21,6 +21,7 @@ export const useDataStore = defineStore('data', {
   }),
   actions: {
     async fetchData(force = false): Promise<Category[] | null> {
+      
       // 已经加载过并且不强制刷新，就直接返回
       if (this.loaded && !force) return this.info
 
@@ -36,6 +37,7 @@ export const useDataStore = defineStore('data', {
         this.loaded = true
         this.cur_index = 0
         this.length = this.info.length
+        console.log("fetchCategories this.info",this.info)
       } catch (err) {
         this.error = err as AxiosError
         console.error('数据获取失败:', err)

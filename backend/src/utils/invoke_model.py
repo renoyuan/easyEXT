@@ -11,13 +11,34 @@ from loguru import logger
 
 from .tools import timeit
 
-
+from abc import ABC, abstractmethod
 
 api_key = os.getenv("paddle_api_key")
 
+class InvokeModelBase():
+    @abstractmethod
+    def _invoke_model(self,*args,**kwargs):
+        """
+        强制子类实现的抽象方法
+        """
+        pass
+    
+    @abstractmethod
+    def _postprocessing(self,model_res):
+        """
+        后处理
+        """
+        pass
+
+    def __call__(self,*args,**kwargs):
+        """
+        调用模型
+        """
+
+        return self._postprocessing(self._invoke_model(*args,**kwargs))
 
 
-class InvokeModel():
+class InvokeModel(InvokeModelBase):
     """
     该类用于封装模型调用相关的功能，可根据传入的模型名称初始化，并执行模型的抽取操作。
     """
@@ -103,8 +124,17 @@ class InvokeModel():
         )
         return chat_result
 
-       
-       
+    def _invoke_model(self,input,key_list):
+
+       return self.extract(input,key_list)
+    def _postprocessing(self,model_res):
+        """
+        后处理
+        """
+        finally_res = []
+        finally_res.append(model_res["chat_res"])
+
+        return finally_res
 
     # 初始化 PaddleOCR 实例
     def ocr(self,):

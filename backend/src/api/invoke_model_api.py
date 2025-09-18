@@ -47,32 +47,33 @@ TODO 匹配场景 1 入库
     
 # ocr 识别 post ok
 @invoke_model_router.post("/extract")
-async def extract(  originalFiles: List[UploadFile] ,scene_lable: Optional[str] = None,model = Depends(get_model),scenes = Depends(get_scenes),db_engine = Depends(get_db_engine)):
-
-
+async def extract(  originalFiles: List[UploadFile] ,scene_id: Optional[int] = None,scene_lable: Optional[str] = None,model = Depends(get_model),scenes = Depends(get_scenes),db_engine = Depends(get_db_engine)):
 
     """
-        res = {
-        "ori_info": {
-            "file_length": 0,
-            "file_info": []
-        },
-        "deal_info": {
-            "file_length": 0,
-            "file_info": []
-        }
-    }
+    上传文件抽取要素
     """
+    
     print(f"scene_lable is {scene_lable} scenes is {scenes.keys()}")
-    scene = OpScenes(db_engine).query_scene(scene_name=scene_lable)
+    
+    if not scene_id and not scene_lable:
+        return gen_response(619, {"message": "场景不存在"})
+    
+    if scene_id:
+        scene = OpScenes(db_engine).query_scene(id=scene_id)
+    else:
+        scene = OpScenes(db_engine).query_scene(scene_name=scene_lable)
+        
+        
+    scene_name = scene.scene_name
 
-    if scene_lable in scenes and scene:
-        key_list = scenes[scene_lable]
+    if scene_name in scenes:
+        key_list = scenes[scene_name]
     else:
         return gen_response(619, {"message": "场景不存在"})
+    
     task = OpTasks(db_engine).add_task(scene_id=scene.id,status=0,task_status=0)
 
-    data = model.extract(await uploadfile_to_ndarray(originalFiles[0]),key_list)
+    data = model(await uploadfile_to_ndarray(originalFiles[0]),key_list)
     OpTaskresults(db_engine).add_taskresult(task_id=task.id,extracted_data=data,data_status="1")
 
     OpTasks(db_engine).update_task(task_id=task.id,status=1,task_status=1)

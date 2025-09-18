@@ -113,7 +113,7 @@ async def query_task_info( task_id: str|int ,db_engine = Depends(get_db_engine))
     extracted_data =task_info["extracted_data"]
 
     logger.info(f"{task_id} element_config {element_config} 识别结果 {task_info}")
-    return gen_response(200, {"element_config":element_config,"task_info": [extracted_data]})
+    return gen_response(200, {"element_config":element_config,"task_info": extracted_data})
 
 
 

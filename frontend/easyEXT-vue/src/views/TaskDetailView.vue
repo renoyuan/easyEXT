@@ -20,14 +20,14 @@ const formData = ref<any[]>([]); // 表单验证规则（根据字段配置动�
 
 // 表单验证规则（根据字段配置动态生成）
 const dynamicFormRef = ref<FormInstance | null>(null);
-
+const activeNames = ref<any[]>([]);
 onMounted(async () => {
   console.log('下游任务ID:', taskId)
   taskDetail.value  = await fetchDetail(taskId)
   
   console.log('任务详情',taskDetail.value)
   formFields.value = taskDetail.value.data.element_config || []
-  formData.value = taskDetail.value.data.task_info.chat_res || {}
+  formData.value = taskDetail.value.data.task_info || {}
   console.log('表单结果',formData.value)
   console.log('表单字段配置:', formFields.value)
 })
@@ -95,37 +95,32 @@ interface FormField {
 </script>
 
 <template>
-   <el-form :model="formData" label-width="120px" :rules="formRules" >
-   <!-- <el-collapse v-model="formData"> -->
-    <el-collapse-item v-for="(group, index) in formData" :key="index"  :title="index" :name="index"  ></el-collapse-item>
-        
-        
-         <!-- 动态渲染表单项 -->
-
-        <el-form-item  v-for="field in formFields"  :key="field" :label="field" :prop="field">
-  
-        
-    
-    <el-input v-model="group[field]" />
-    </el-form-item>
-    </el-collapse-item>
-
-</el-form>
+  <el-scrollbar height="1050px" >
+  <el-form :model="formData" label-width="120px" :rules="formRules">
+    <!-- 修正折叠面板结构 -->
+    <el-collapse v-model="activeNames">
+      <el-collapse-item 
+        v-for="(group, index) in formData" 
+        :key="index" 
+        :title="` ${index}`" 
+        :name="index"
+      >
+        <!-- 动态渲染表单项 -->
+        <el-form-item 
+          v-for="(field, fieldIndex) in formFields" 
+          :key="fieldIndex" 
+          :label="field" 
+          :prop="`groups[${index}].${field}`" 
+        >
+          <el-input v-model="formData[index][field]" />
+        </el-form-item>
+      </el-collapse-item>
+    </el-collapse>
+  </el-form>
+  </el-scrollbar>
 </template>
 
 <style scoped>
 </style>
         
-     
-         
-    
-    <el-input v-model="group[field]" />
-    </el-form-item>
-    </el-collapse-item>
-<!--   
-  </el-collapse> -->
-
-    <el-button type="primary" @click="handleSubmit">提交</el-button>
-  </el-form>
-
-</template>
+  
