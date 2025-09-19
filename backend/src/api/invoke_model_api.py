@@ -23,7 +23,7 @@ async def uploadfile_to_ndarray(file: UploadFile) -> np.ndarray:
     content = await file.read()  # 读取二进制数据
     img = Image.open(io.BytesIO(content))  # 通过内存流加载
     # 统一转换为 RGB 格式（避免调色板/灰度图维度问题）
-    if img.mode in ("P", "L", "1"):
+    if img.mode in ("P", "L", "1", "RGBA"):
         img = img.convert("RGB")
     img_array = np.array(img)
     print("图像维度:", img_array.shape) 

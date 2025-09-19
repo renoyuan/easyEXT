@@ -18,24 +18,7 @@ interface MenuItem {
   name: string
 }
 
-const categories_ = ref<Category[]>([
-  {
-    id: 'c1',
-    name: '分类一',
-    items: [
-      { id: 'i1', name: '选项1' },
-      { id: 'i2', name: '选项2' },
-    ],
-  },
-  {
-    id: 'c2',
-    name: '分类二',
-    items: [
-      { id: 'i3', name: '选项3' },
-      { id: 'i4', name: '选项4' },
-    ],
-  },
-])
+const categories_ = ref<Category[]>([])
 
 const handleAction = (category: Category, item: MenuItem) => {
   console.log(`操作：${category.name} - ${item.name}`)
@@ -105,6 +88,8 @@ onMounted(async () => {
             <el-button type="primary" @click="handleUploadClick">
               <UploadView 
               v-if="isUploadVisible"
+              :sceneName="item.name"
+              :sceneID="item.id"
               :visible="isUploadVisible"
               @close="isUploadVisible = true"
                 />
@@ -121,10 +106,11 @@ onMounted(async () => {
     <el-header>  
      <!-- 面包屑导航 -->
       <!-- <Breadcrumb /> -->
-    <el-breadcrumb class="arrow-right-class" :separator-icon="ArrowRight">
+    <Breadcrumb />
+    <!-- <el-breadcrumb class="arrow-right-class" :separator-icon="ArrowRight">
       <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
       <el-breadcrumb-item :to="{ path: '/about' }">promotion detail</el-breadcrumb-item>
-    </el-breadcrumb>
+    </el-breadcrumb> -->
     </el-header>
     <el-main>
     <!-- 内容区域 -->
@@ -165,10 +151,12 @@ onMounted(async () => {
 /* 内容区域 */
 .content {
   position: fixed;
+  width: calc(100% - 180px- 35px); /* 留出左侧菜单的宽度 */
+  right: 35px; /* 右侧留白宽度 */
   left: 180px;
   top: 50px; /* 留出面包屑导航的高度 */
   margin-left: 0px; /* 留出左侧菜单的宽度 */
-  background: #f0f2f5;
+  background: #e7e8ea;
 
 }
 

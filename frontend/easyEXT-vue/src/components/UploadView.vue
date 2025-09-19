@@ -1,72 +1,16 @@
-<template>
-  <!-- 触发按钮 -->
-  <el-button type="primary" @click="openUploadDialog">
-    <i-ep-plus class="mr-2" /> 上传文件
-  </el-button>
-
-  <!-- 上传弹窗 -->
-  <el-dialog
-    v-model="dialogVisible"
-    :before-close="handleClose"
-    title="文件上传"
-    width="900px"
-   
-  >
-    <!-- 上传区域 -->
-    <template #content>
-      <el-upload
-        ref="uploadRef"
-       
-        :before-upload="beforeUpload"
-        :on-change="handleChange"
-        :on-success="handleSuccess"
-        :on-error="handleError"
-        :file-list="fileList"
-        :limit="5"
-        :accept="allowedTypes"
-        list-type="picture-card"
-      >
-        <i-ep-plus class="upload-icon" />
-        <div class="el-upload__tip">
-          支持 {{ allowedTypesText }}，单文件不超过 {{ maxSizeMB }}MB
-        </div>
-      </el-upload>
-    </template>
-
-    <!-- 预览区域 -->
-    <template #preview>
-      <div v-if="previewVisible" class="preview-container">
-        <img :src="previewUrl" class="preview-image" />
-        <el-button @click="previewVisible = false">关闭预览</el-button>
-      </div>
-    </template>
-
-    <!-- 操作按钮 -->
-    <div></div>
-    <template #footer>
-      <el-button type="primary" @click="triggerFileSelect">
-        <i-ep-plus class="mr-2" /> 选择文件
-      </el-button>
-        <!-- 隐藏的文件输入框 -->
-        <input 
-          type="file" 
-          ref="fileInputRef" 
-          style="display: none"
-          :accept="allowedTypes"
-          @change="handleFileSelect"
-          multiple
-        />
-      <el-button @click="dialogVisible = false">取消</el-button>
-      <el-button type="primary" @click="submitUpload">确认上传</el-button>
-    </template>
-  </el-dialog>
-</template>
-
 <script setup lang="ts">
 import { ref, computed, defineExpose } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Image as ImageIcon } from '@element-plus/icons-vue'
+import { UploadFile } from 'element-plus'
+import { ElUpload } from 'element-plus'
 
+// 父组件传入的属性类型定义
+interface Props {
+  sceneNmae: string;
+  sceneID: string;
+}
+const props = defineProps<Props>();
 // 新增响应式数据
 const fileInputRef = ref<HTMLInputElement | null>(null)
 
@@ -119,6 +63,7 @@ const previewVisible = ref(false)
 const previewUrl = ref('')
 const fileList = ref<FileItem[]>([])
 const uploadRef = ref<InstanceType<typeof ElUpload> | null>(null)
+
 
 // 计算属性
 const allowedTypesText = computed(() => {
@@ -184,11 +129,77 @@ const previewImage = (url: string) => {
   previewVisible.value = true
 }
 
-// 暴露方法
+// 暴露子组件方法
 defineExpose({
   openUploadDialog
 })
 </script>
+
+<template>
+  <!-- 触发按钮 -->
+  <el-button type="primary" @click="openUploadDialog">
+    <i-ep-plus class="mr-2" /> 上传文件
+  </el-button>
+
+  <!-- 上传弹窗 -->
+  <el-dialog
+    v-model="dialogVisible"
+    :before-close="handleClose"
+    :title="`${props.sceneName || '未知场景'} - 文件上传`"
+    width="900px"
+    
+  >
+    <!-- 上传区域 -->
+    <template #content>
+      <el-upload
+        ref="uploadRef"
+       
+        :before-upload="beforeUpload"
+        :on-change="handleChange"
+        :on-success="handleSuccess"
+        :on-error="handleError"
+        :file-list="fileList"
+        :limit="5"
+        :accept="allowedTypes"
+        list-type="picture-card"
+      >
+        <i-ep-plus class="upload-icon" />
+        <div class="el-upload__tip">
+          支持 {{ allowedTypesText }}，单文件不超过 {{ maxSizeMB }}MB
+        </div>
+      </el-upload>
+    </template>
+
+    <!-- 预览区域 -->
+    <template #preview>
+      <div v-if="previewVisible" class="preview-container">
+        <img :src="previewUrl" class="preview-image" />
+        <el-button @click="previewVisible = false">关闭预览</el-button>
+      </div>
+    </template>
+
+    <!-- 操作按钮 -->
+    <div></div>
+    <template #footer>
+      <el-button type="primary" @click="triggerFileSelect">
+        <i-ep-plus class="mr-2" /> 选择文件
+      </el-button>
+        <!-- 隐藏的文件输入框 -->
+        <input 
+          type="file" 
+          ref="fileInputRef" 
+          style="display: none"
+          :accept="allowedTypes"
+          @change="handleFileSelect"
+          multiple
+        />
+      <el-button @click="dialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="submitUpload">确认上传</el-button>
+    </template>
+  </el-dialog>
+</template>
+
+
 
 <style scoped>
 .upload-icon {

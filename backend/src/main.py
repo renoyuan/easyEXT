@@ -81,4 +81,4 @@ app.middleware("http")
 # 如果运行的是这个文件，则启动 FastAPI 应用
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, workers=2)
