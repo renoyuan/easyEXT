@@ -4,30 +4,48 @@ import { ElMessage } from 'element-plus'
 import { Plus, Image as ImageIcon } from '@element-plus/icons-vue'
 import { UploadFile } from 'element-plus'
 import { ElUpload } from 'element-plus'
+import {uploadTask} from '@/api/api'
 
-// 父组件传入的属性类型定义
-interface Props {
-  sceneNmae: string;
-  sceneID: string;
-}
-const props = defineProps<Props>();
+// 确保定义了所有 props，并且类型正确
+const props = defineProps({
+  sceneID: {
+    type: Number, // 注意类型是 Number，因为父组件使用了 Number(item.id)
+    required: true // 如果该 prop 是必需的，请设置
+  },
+  sceneName: {
+    type: String,
+    required: true
+  },
+  visible: {
+    type: Boolean,
+    required: true
+  }
+})
+
+// 组件属性
+const propsa = ({
+
+  allowedTypes: {
+    type: String,
+    default: '.jpg,.jpeg,.png,.pdf'
+  },
+  maxSizeMB: {
+    type: Number,
+    default: 5
+  }
+})
+
+
+
 // 新增响应式数据
 const fileInputRef = ref<HTMLInputElement | null>(null)
+const selectedFiles = ref<File[]>([])
 
 // 修改原有方法：处理文件选择
 const handleFileSelect = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  if (input.files && input.files.length > 0) {
-    const files = Array.from(input.files)
-    // 转换为UploadFile格式
-    const uploadFiles = files.map(file => ({
-      raw: file,
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      percentage: 0
-    }))
-    fileList.value = uploadFiles
+const files = (event.target as HTMLInputElement).files
+  if (files) {
+    selectedFiles.value = Array.from(files)
   }
 }
 
@@ -44,18 +62,7 @@ interface FileItem {
   url: string
 }
 
-// 组件属性
-const props = defineProps({
 
-  allowedTypes: {
-    type: String,
-    default: '.jpg,.jpeg,.png,.pdf'
-  },
-  maxSizeMB: {
-    type: Number,
-    default: 5
-  }
-})
 
 // 响应式数据
 const dialogVisible = ref(false)
@@ -67,7 +74,7 @@ const uploadRef = ref<InstanceType<typeof ElUpload> | null>(null)
 
 // 计算属性
 const allowedTypesText = computed(() => {
-  return props.allowedTypes
+  return propsa.allowedTypes
     .split(',')
     .map(t => t.replace(/^\./, ''))
     .join('/ ')
@@ -84,14 +91,14 @@ const handleClose = () => {
 }
 
 const beforeUpload = (file: File) => {
-  const isTypeValid = props.allowedTypes.includes(`.${file.name.split('.').pop()}`)
-  const isLtMaxSize = file.size <= props.maxSizeMB * 1024 * 1024
+  const isTypeValid = propsa.allowedTypes.includes(`.${file.name.split('.').pop()}`)
+  const isLtMaxSize = file.size <= propsa.maxSizeMB * 1024 * 1024
 
   if (!isTypeValid) {
     ElMessage.error(`不支持的文件类型：${file.name}`)
   }
   if (!isLtMaxSize) {
-    ElMessage.error(`文件大小不能超过 ${props.maxSizeMB}MB`)
+    ElMessage.error(`文件大小不能超过 ${propsa.maxSizeMB}MB`)
   }
 
   return isTypeValid && isLtMaxSize
@@ -118,10 +125,19 @@ const handleError = (err: any, file: UploadFile) => {
   ElMessage.error(`上传失败：${err.message}`)
 }
 
-const submitUpload = async () => {
-  if (!uploadRef.value) return
-  await uploadRef.value.submit()
-  dialogVisible.value = false
+async function submitUpload() {
+  if (selectedFiles.value.length === 0) return
+  for (const file of selectedFiles.value) {
+    try {
+      const res = await uploadTask({
+        file,
+        sceneID: props.sceneID
+      })
+      console.log('上传成功', res.data)
+    } catch (e) {
+      console.error('上传失败', e)
+    }
+  }
 }
 
 const previewImage = (url: string) => {
@@ -179,7 +195,7 @@ defineExpose({
     </template>
 
     <!-- 操作按钮 -->
-    <div></div>
+   
     <template #footer>
       <el-button type="primary" @click="triggerFileSelect">
         <i-ep-plus class="mr-2" /> 选择文件

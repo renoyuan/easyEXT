@@ -1,6 +1,6 @@
 // types.ts
 export interface CategoryItem {
-  id: string;
+  id: number;
   name: string;
 }
 

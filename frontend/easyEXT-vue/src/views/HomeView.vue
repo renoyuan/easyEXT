@@ -58,7 +58,7 @@
     
     <el-card v-if="curCategory" class="box-card"
       v-for="(item, index) in items"
-      :key="index" 
+      :key="item.id" 
       style="margin-right: 10px;" shadow="always">
       <template #header>{{item.name}}</template>
       
@@ -73,6 +73,8 @@
      <el-button type="primary" @click="handleUploadClick">
       <UploadView 
       v-if="isUploadVisible"
+      :sceneID=item.id
+      :sceneName="item.name"
       :visible="isUploadVisible"
       @close="isUploadVisible = true"
         />
@@ -109,6 +111,8 @@
      <el-button type="primary" @click="handleUploadClick">
       <UploadView 
       v-if="isUploadVisible"
+      :sceneID=item.id
+      :sceneName="item.name"
       :visible="isUploadVisible"
       @close="isUploadVisible = true"
         />

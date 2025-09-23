@@ -79,3 +79,34 @@ export const fetchDetail = async (taskId: number | string): Promise<any> => {
     
   }
 }
+
+
+// 文件上传接口
+export interface UploadTaskParams {
+  file: File
+  sceneID: number | string
+  fileFieldName?: string // 默认 originalFiles
+  apiPath?: string // 默认 '/api/v1/invoke_model/extract'
+}
+
+
+export async function uploadTask(params: UploadTaskParams): Promise<any> {
+  const {
+    file,
+    sceneID,
+    fileFieldName = 'originalFiles',
+    apiPath = '/api/v1/invoke_model/extract'
+  } = params
+  console.info("上传文件 sceneID",sceneID)
+  const formData = new FormData()
+  formData.append(fileFieldName, file, file.name)
+
+  const url = `${apiPath}?scene_id=${encodeURIComponent(sceneID)}`
+
+  return api.post(url, formData, {
+    headers: {
+      'accept': 'application/json',
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}

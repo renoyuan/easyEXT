@@ -89,9 +89,12 @@ class OpScenes(OPDBBase):
                     scenes_map[scene.id] = scene.scene_name
                 return scenes_map
 
-    def query_scene(self,scene_name):
+    def query_scene(self,scene_id=None,scene_name=None):
         with Session(self.engine) as session:
-            statement = select(Scenes).where(Scenes.scene_name == scene_name)
+            if scene_id:
+                statement = select(Scenes).where(Scenes.id == int(scene_id))
+            elif scene_name:
+                statement = select(Scenes).where(Scenes.scene_name == scene_name)
             results = session.exec(statement)
             scene = results.first()
             return scene

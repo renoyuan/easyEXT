@@ -18,7 +18,7 @@ import numpy as np
 import io
 from .response_code import gen_response
 from db.op_db import OpTasks,OpTaskresults,OpScenes
-
+from utils.status_enum import TaskStatusEnum
 async def uploadfile_to_ndarray(file: UploadFile) -> np.ndarray:
     content = await file.read()  # 读取二进制数据
     img = Image.open(io.BytesIO(content))  # 通过内存流加载
@@ -59,10 +59,13 @@ async def extract(  originalFiles: List[UploadFile] ,scene_id: Optional[int] = N
         return gen_response(619, {"message": "场景不存在"})
     
     if scene_id:
-        scene = OpScenes(db_engine).query_scene(id=scene_id)
+        scene = OpScenes(db_engine).query_scene(scene_id=scene_id)
+        scene_lable = scene.scene_name if scene else ""
     else:
         scene = OpScenes(db_engine).query_scene(scene_name=scene_lable)
         
+    if not scene:
+        return gen_response(619, {"message": "场景不存在"})
         
     scene_name = scene.scene_name
 
@@ -71,12 +74,12 @@ async def extract(  originalFiles: List[UploadFile] ,scene_id: Optional[int] = N
     else:
         return gen_response(619, {"message": "场景不存在"})
     
-    task = OpTasks(db_engine).add_task(scene_id=scene.id,status=0,task_status=0)
+    task = OpTasks(db_engine).add_task(scene_id=scene.id,status=TaskStatusEnum.PENDING.value,task_status=TaskStatusEnum.PENDING.value)
 
     data = model(await uploadfile_to_ndarray(originalFiles[0]),key_list)
-    OpTaskresults(db_engine).add_taskresult(task_id=task.id,extracted_data=data,data_status="1")
+    OpTaskresults(db_engine).add_taskresult(task_id=task.id,extracted_data=data,data_status=TaskStatusEnum.COMPLETED.value)
 
-    OpTasks(db_engine).update_task(task_id=task.id,status=1,task_status=1)
+    OpTasks(db_engine).update_task(task_id=task.id,status=TaskStatusEnum.COMPLETED.value,task_status=TaskStatusEnum.COMPLETED.value)
 
     logger.info(f"{scene_lable} 识别结果 {data}")
     
