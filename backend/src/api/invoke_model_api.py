@@ -18,7 +18,7 @@ import numpy as np
 import io
 from .response_code import gen_response
 from db.op_db import OpTasks,OpTaskresults,OpScenes
-from utils.status_enum import TaskStatusEnum
+from utils.types_enum import TaskStatusEnum,FileTypeEnum,TaskPhaseEnum
 async def uploadfile_to_ndarray(file: UploadFile) -> np.ndarray:
     content = await file.read()  # 读取二进制数据
     img = Image.open(io.BytesIO(content))  # 通过内存流加载
@@ -74,6 +74,12 @@ async def extract(  originalFiles: List[UploadFile] ,scene_id: Optional[int] = N
     else:
         return gen_response(619, {"message": "场景不存在"})
     
+    # 1 任务入库
+    # 2 文件入库
+    # 3 模型调用
+    # 4 任务状态更新
+    # 5 结果入库
+    # 6 返回结果
     task = OpTasks(db_engine).add_task(scene_id=scene.id,status=TaskStatusEnum.PENDING.value,task_status=TaskStatusEnum.PENDING.value)
 
     data = model(await uploadfile_to_ndarray(originalFiles[0]),key_list)

@@ -65,6 +65,8 @@ class File(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     task_id: int
     status: int = 0 # 0-待处理 1-已处理 2 - 失败
+    file_type:int = 0 # 0-未知 1-图片 2-doc 3-pdf
+    file_name: str
     fdfs_id: str
     page: int|None = None
     taltol_page: int|None = None 
@@ -92,11 +94,10 @@ class Tasks(BaseModel, table=True):
     __tablename__ = "tasks"
 
     id: int | None = Field(default=None, primary_key=True)
-    
-
+    task_id: str = Field(default_factory=lambda: str(uuid4()), index=True, unique=True, nullable=False)
     scene_id: int
-    status: str # 0-待处理 1-处理中 2-已完成 3-失败
-    task_status: str # 0-待处理 1-处理中 2-已完成 3-失败
+    status: int # 0-待处理 1-处理中 2-已完成 3-失败
+    phase: int # 0-预处理 1-模型调用 3-后处理 4-结果入库
     
     created_time:Optional[datetime]   = Field(
         default=None,
@@ -150,11 +151,21 @@ class Taskresults(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     task_id: str
+    
+    # 使用 PostgreSQL 的 JSONB 类型
     extracted_data: Optional[Dict[str, Any]] = Field(
         default=None,
-        sa_column=Column(JSONB)  # 使用 PostgreSQL 的 JSONB 类型
+        sa_column=Column(JSONB)  # 模型结果 
     )
-    data_status: int =0
+    post_date:Optional[Dict[str, Any]] = Field(
+        default=None,
+        sa_column=Column(JSONB)  # 后处理结果 
+    )
+    finally_data:  Optional[Dict[str, Any]] = Field(
+        default=None,
+        sa_column=Column(JSONB)  # 最终结果
+    )
+    status: int =0
     
     created_time: datetime | None = Field(
         default=None,
