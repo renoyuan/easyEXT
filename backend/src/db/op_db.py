@@ -16,7 +16,7 @@ from loguru import logger
 from sqlmodel import SQLModel, Field, create_engine, Session, select,func
 from typing import Optional
 from sqlalchemy.sql.expression import and_
-from db.model import Scenes,Tasks,Taskresults,Elements
+from db.model import Scenes,Tasks,Taskresults,Elements,File
 
 
 class OPDBBase(object):
@@ -110,10 +110,16 @@ class OpElements(OPDBBase):
             return element
 
 class OpTasks(OPDBBase):
-    def add_task(self,scene_id,status,task_status):
+    def add_taskfile(self,task_id,file_id,status  ,file_type,file_name,taltol_page,page):
+        with Session(self.engine) as session:
+            taskfile = File(task_id=task_id,fdfs_id=file_id,status=status,file_type=file_type,file_name=file_name,taltol_page=taltol_page,page=page)
+            session.add(taskfile)
+            session.commit()
+            session.refresh(taskfile)
+    def add_task(self,scene_id,status,phase=0):
        
         with Session(self.engine) as session:
-            task = Tasks(scene_id=scene_id,status=status,task_status=task_status)
+            task = Tasks(scene_id=scene_id,status=status,phase=phase)
             session.add(task)
             session.commit()
             session.refresh(task)
@@ -192,14 +198,14 @@ class OpTasks(OPDBBase):
             task = results.first()
             return task
         
-    def update_task(self,task_id,status,task_status):
+    def update_task(self,task_id,status,phase):
         with Session(self.engine) as session:
             statement = select(Tasks).where(Tasks.id == task_id)
             results = session.exec(statement)
             task = results.first()
             if task:
                 task.status = status
-                task.task_status = task_status
+                task.phase = phase
                 session.add(task)
                 session.commit()
                 session.refresh(task)

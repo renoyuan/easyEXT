@@ -93,8 +93,8 @@ class File(SQLModel, table=True):
 class Tasks(BaseModel, table=True):
     __tablename__ = "tasks"
 
-    id: int | None = Field(default=None, primary_key=True)
-    task_id: str = Field(default_factory=lambda: str(uuid4()), index=True, unique=True, nullable=False)
+    id: int | None = Field(default=None, primary_key=True) # 数据库自增ID
+    task_id: str = Field(default_factory=lambda: str(uuid4()), index=True, unique=True, nullable=False) # 使用 UUID 作为任务ID 对外输出
     scene_id: int
     status: int # 0-待处理 1-处理中 2-已完成 3-失败
     phase: int # 0-预处理 1-模型调用 3-后处理 4-结果入库

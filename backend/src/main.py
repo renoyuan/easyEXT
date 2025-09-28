@@ -18,7 +18,7 @@ from contextlib import asynccontextmanager
 
 from api import api_router
 from utils.invoke_model import InvokeModel
-
+from utils.fastdfs_tools import FDFS
 
 env_path = r".env"
 load_dotenv(env_path)
@@ -32,13 +32,14 @@ from sqlmodel import Session, SQLModel, create_engine
 async def lifespan(app: FastAPI):
     global model
     # 启动时初始化模型
-    app.state.model =InvokeModel("model")  # 替换为实际加载函数
+    # app.state.model =InvokeModel("model")  # 替换为实际加载函数
+    app.state.model = None  # 替换为实际加载函数
     # 加载DB 
     DbConfig = json.loads(os.getenv("DbConfig")) 
     engine = create_engine(f"postgresql+psycopg2://{DbConfig['user']}:{DbConfig['password']}@{DbConfig['host']}:{DbConfig['port']}/{DbConfig['database']}")
     SQLModel.metadata.create_all(engine)
     app.state.db_engine = engine
-    
+    app.state.fdfs = FDFS(fdfs_dict=json.loads(os.getenv("FastDFSConfig")) )
     scenesPath = os.getenv("scenesPath")
     with open(scenesPath, "r", encoding="utf-8") as f:
         app.state.scenes = json.load(f)
